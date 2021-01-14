@@ -1,3 +1,4 @@
 rootProject.name = 'gallery'
 include 'util'
+include 'db'
 include 'log'
