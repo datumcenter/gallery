@@ -1,3 +1,15 @@
+buildscript {
+    repositories {
+        maven {
+            url "http://maven.aliyun.com/nexus/content/groups/public"
+        }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.hidetake:gradle-ssh-plugin:2.10.1"
+    }
+}
 plugins {
     id 'java'
 }
@@ -7,14 +19,30 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
-repositories {
-    maven {
-        url "http://maven.aliyun.com/nexus/content/groups/public"
+apply plugin: 'org.hidetake.ssh'
+
+remotes {
+    office {
+        host = 'localhost'
+        user = ''
+        password = ''
+        port = 22
     }
-    jcenter()
-    mavenCentral()
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+def location = ''
+
+task deploySearch {
+    group = 'release'
+    dependsOn(':search:bootJar')
+    doLast {
+        def source = "${project(':search').buildDir}/libs/io.gallery.search-0.0.1.jar"
+        ssh.run {
+            session(remotes.office) {
+                put from: source, into: location
+                execute location + "run.sh restart"
+                println(location + " in " + remotes.office.host + " deploy success")
+            }
+        }
+    }
 }
